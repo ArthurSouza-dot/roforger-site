@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoForger — Auth</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#040608;--bg2:#080c12;--bg3:#0d1420;--border:#1a2535;--accent:#00aaff;--green:#00e5b0;--red:#ff4444;--text:#c8d8e8;--muted:#3a5070;--white:#e8f0f8; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .bg-grid{position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.2;pointer-events:none;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 75%)}
+  .orb-1{position:fixed;width:400px;height:400px;background:#00aaff10;top:-100px;left:-100px;border-radius:50%;filter:blur(80px);pointer-events:none}
+  .orb-2{position:fixed;width:300px;height:300px;background:#ff6a000d;bottom:-80px;right:-80px;border-radius:50%;filter:blur(80px);pointer-events:none}
+  .card{position:relative;z-index:10;width:440px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:48px 40px;text-align:center;animation:fadeUp .5s ease both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .card::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+  .corner{position:absolute;width:16px;height:16px;border-color:var(--accent);border-style:solid;opacity:.4}
+  .corner-tl{top:12px;left:12px;border-width:1px 0 0 1px}.corner-tr{top:12px;right:12px;border-width:1px 1px 0 0}
+  .corner-bl{bottom:12px;left:12px;border-width:0 0 1px 1px}.corner-br{bottom:12px;right:12px;border-width:0 1px 1px 0}
+  .logo-icon{width:64px;height:64px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:900;color:var(--accent);box-shadow:0 0 20px #00aaff30}
+  .logo-name{font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:700;color:var(--white);letter-spacing:3px;margin-bottom:4px}
+  .logo-name span{color:var(--accent)}
+  .logo-sub{font-size:.75rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+  .divider{display:flex;align-items:center;gap:12px;margin-bottom:20px;font-size:.72rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+  .btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--white);font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;letter-spacing:1px;cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s;margin-bottom:10px}
+  .btn-google:hover{border-color:var(--accent);background:#0d1a2a;box-shadow:0 0 20px #00aaff30}
+  .or-sep{font-size:.72rem;color:var(--muted);margin:10px 0;letter-spacing:1px}
+  .field-label{font-size:.68rem;color:var(--muted);text-align:left;margin-bottom:5px;letter-spacing:1px;font-family:'Orbitron',sans-serif}
+  .field-wrap{margin-bottom:10px}
+  .inp{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Rajdhani',sans-serif;font-size:.95rem;padding:10px 14px;transition:border-color .15s}
+  .inp:focus{outline:none;border-color:var(--accent)}
+  .tabs{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .tab{flex:1;padding:8px;background:var(--bg3);color:var(--muted);font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:1px;cursor:pointer;border:none;transition:background .15s,color .15s}
+  .tab.active{background:var(--accent);color:#000;font-weight:700}
+  .btn-primary{width:100%;padding:12px;background:var(--accent);border:none;border-radius:8px;color:#000;font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;letter-spacing:1px;cursor:pointer;transition:background .2s}
+  .btn-primary:hover{background:#22bbff;box-shadow:0 0 20px #00aaff40}
+  .status-msg{margin-top:14px;font-size:.82rem;color:var(--muted);min-height:18px}
+  .status-msg.loading{color:var(--accent)}.status-msg.error{color:var(--red)}.status-msg.ok{color:var(--green)}
+  .card-footer{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:.7rem;color:var(--muted);letter-spacing:1px}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid #00aaff30;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* Success screen */
+  .success-screen{display:none;text-align:center}
+  .success-icon{font-size:3rem;margin-bottom:16px}
+  .success-title{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;color:var(--green);letter-spacing:2px;margin-bottom:8px}
+  .success-sub{font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="orb-1"></div>
+<div class="orb-2"></div>
+
+<div class="card">
+  <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+  <!-- FORM -->
+  <div id="auth-form">
+    <div class="logo-icon">RF</div>
+    <div class="logo-name">Ro<span>Forger</span></div>
+    <div class="logo-sub">Pro Studio</div>
+
+    <!-- Google -->
+    <button class="btn-google" id="btn-google" onclick="loginGoogle()">
+      <svg width="20" height="20" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continuar com Google
+    </button>
+
+    <div class="or-sep">— ou —</div>
+
+    <div class="tabs">
+      <button class="tab active" id="tab-login"    onclick="switchTab('login')">ENTRAR</button>
+      <button class="tab"        id="tab-register" onclick="switchTab('register')">CRIAR CONTA</button>
+    </div>
+
+    <div id="form-login">
+      <div class="field-wrap"><div class="field-label">Email</div><input class="inp" id="login-email" type="email" placeholder="seu@email.com"/></div>
+      <div class="field-wrap"><div class="field-label">Senha</div><input class="inp" id="login-pass" type="password" placeholder="••••••••"/></div>
+      <button class="btn-primary" onclick="doLogin()">ENTRAR</button>
+    </div>
+
+    <div id="form-register" style="display:none">
+      <div class="field-wrap"><div class="field-label">Nome</div><input class="inp" id="reg-name" type="text" placeholder="Seu nome"/></div>
+      <div class="field-wrap"><div class="field-label">Email</div><input class="inp" id="reg-email" type="email" placeholder="seu@email.com"/></div>
+      <div class="field-wrap"><div class="field-label">Senha (mín. 6 caracteres)</div><input class="inp" id="reg-pass" type="password" placeholder="••••••••"/></div>
+      <button class="btn-primary" onclick="doRegister()">CRIAR CONTA</button>
+    </div>
+
+    <div class="status-msg" id="status-msg"></div>
+    <div class="card-footer">RoForger Pro v2.0 · Projetos salvos na nuvem</div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">LOGIN REALIZADO!</div>
+    <div class="success-sub">Retornando ao RoForger Studio...<br>Pode fechar esta aba.</div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+  import {
+    getAuth, signInWithPopup, GoogleAuthProvider,
+    signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    updateProfile, onAuthStateChanged
+  } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAOR6UGedU-0yUgQ9I6QsOyTYwkH9z6TkA",
+    authDomain:        "roforger-ca0c4.firebaseapp.com",
+    databaseURL:       "https://roforger-ca0c4-default-rtdb.firebaseio.com",
+    projectId:         "roforger-ca0c4",
+    storageBucket:     "roforger-ca0c4.firebasestorage.app",
+    messagingSenderId: "999264568857",
+    appId:             "1:999264568857:web:741ab9ea0656e7cbb60c88",
+  };
+
+  const app      = initializeApp(firebaseConfig);
+  const auth     = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  const setStatus = (msg, cls='') => {
+    const el = document.getElementById('status-msg');
+    el.innerHTML = msg; el.className = 'status-msg ' + cls;
+  };
+
+  // Envia token de volta ao Electron via deep link
+  async function sendTokenToElectron(user) {
+    const token = await user.getIdToken();
+    const userData = JSON.stringify({
+      uid:         user.uid,
+      email:       user.email,
+      displayName: user.displayName,
+      photoURL:    user.photoURL,
+      token,
+    });
+
+    // Tenta enviar via deep link roforger://
+    const encoded = encodeURIComponent(userData);
+    window.location.href = `roforger://auth?data=${encoded}`;
+
+    // Mostra tela de sucesso
+    document.getElementById('auth-form').style.display    = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+  }
+
+  // Login com Google (funciona porque estamos no navegador agora!)
+  window.loginGoogle = async () => {
+    const btn = document.getElementById('btn-google');
+    btn.disabled = true;
+    setStatus('<span class="spin"></span> Abrindo Google...', 'loading');
+    try {
+      const result = await signInWithPopup(auth, provider);
+      setStatus('Login realizado! ✅', 'ok');
+      await sendTokenToElectron(result.user);
+    } catch(err) {
+      setStatus('Erro: ' + err.message, 'error');
+      btn.disabled = false;
+    }
+  };
+
+  // Login email/senha
+  window.doLogin = async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-pass').value;
+    if (!email||!pass) { setStatus('Preencha todos os campos', 'error'); return; }
+    setStatus('<span class="spin"></span> Entrando...', 'loading');
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, pass);
+      setStatus('Login realizado! ✅', 'ok');
+      await sendTokenToElectron(result.user);
+    } catch(err) {
+      const msgs = {
+        'auth/user-not-found':     'Usuário não encontrado',
+        'auth/wrong-password':     'Senha incorreta',
+        'auth/invalid-credential': 'Email ou senha incorretos',
+        'auth/invalid-email':      'Email inválido',
+      };
+      setStatus(msgs[err.code] || 'Erro: ' + err.message, 'error');
+    }
+  };
+
+  // Criar conta
+  window.doRegister = async () => {
+    const name  = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-pass').value;
+    if (!name||!email||!pass) { setStatus('Preencha todos os campos', 'error'); return; }
+    if (pass.length < 6)      { setStatus('Senha precisa ter 6+ caracteres', 'error'); return; }
+    setStatus('<span class="spin"></span> Criando conta...', 'loading');
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(cred.user, { displayName: name });
+      setStatus('Conta criada! ✅', 'ok');
+      await sendTokenToElectron(cred.user);
+    } catch(err) {
+      const msgs = {
+        'auth/email-already-in-use': 'Email já cadastrado — faça login',
+        'auth/weak-password':        'Senha fraca — use 6+ caracteres',
+        'auth/invalid-email':        'Email inválido',
+      };
+      setStatus(msgs[err.code] || 'Erro: ' + err.message, 'error');
+    }
+  };
+
+  window.switchTab = (tab) => {
+    document.getElementById('tab-login').classList.toggle('active',    tab==='login');
+    document.getElementById('tab-register').classList.toggle('active', tab==='register');
+    document.getElementById('form-login').style.display    = tab==='login'    ? 'block' : 'none';
+    document.getElementById('form-register').style.display = tab==='register' ? 'block' : 'none';
+    setStatus('');
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('form-register').style.display !== 'none') window.doRegister();
+    else window.doLogin();
+  });
+</script>
+</body>
+</html>
